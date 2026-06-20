@@ -55,3 +55,22 @@ export function boardCells(): number[] {
   }
   return cells;
 }
+
+const CELL_INDEX: Record<number, number> = (() => {
+  const map: Record<number, number> = {};
+  boardCells().forEach((n, i) => {
+    map[n] = i;
+  });
+  return map;
+})();
+
+/** Center of a square as percentages (0-100) of the board, for overlays. */
+export function cellCenter(n: number): { x: number; y: number } {
+  const i = CELL_INDEX[n] ?? 0;
+  const rowFromTop = Math.floor(i / BOARD_COLS);
+  const col = i % BOARD_COLS;
+  return {
+    x: ((col + 0.5) / BOARD_COLS) * 100,
+    y: ((rowFromTop + 0.5) / BOARD_ROWS) * 100,
+  };
+}
