@@ -22,6 +22,8 @@ export function CreateRoomModal({ open, onClose, onCreated, gameType }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const lockTwoPlayers = gameType === "number_prediction";
+
   useEffect(() => {
     if (open) {
       setName("");
@@ -60,28 +62,34 @@ export function CreateRoomModal({ open, onClose, onCreated, gameType }: Props) {
           minLength={2}
         />
 
-        <div>
-          <span className="mb-1.5 block text-sm font-medium text-muted">
-            Max players
-          </span>
-          <div className="flex gap-2">
-            {[2, 3, 4].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setMaxPlayers(n)}
-                className={
-                  "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors " +
-                  (maxPlayers === n
-                    ? "border-primary bg-primary/15 text-foreground"
-                    : "border-border bg-surface text-muted hover:text-foreground")
-                }
-              >
-                {n}
-              </button>
-            ))}
+        {lockTwoPlayers ? (
+          <p className="rounded-lg bg-surface-2/50 px-3 py-2 text-sm text-muted">
+            Number Prediction is a 2-player duel.
+          </p>
+        ) : (
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-muted">
+              Max players
+            </span>
+            <div className="flex gap-2">
+              {[2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setMaxPlayers(n)}
+                  className={
+                    "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors " +
+                    (maxPlayers === n
+                      ? "border-primary bg-primary/15 text-foreground"
+                      : "border-border bg-surface text-muted hover:text-foreground")
+                  }
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {error && (
           <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>

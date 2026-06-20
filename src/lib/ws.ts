@@ -4,25 +4,27 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getToken } from "./api";
 import { wsBaseUrl } from "./config";
-import type { GameState, Room, RoomSocketMessage } from "@/types";
+import type { GameState, NumberState, Room, RoomSocketMessage } from "@/types";
 
 export type ConnectionStatus = "connecting" | "open" | "closed";
 
-export type RoomAction = "start" | "roll" | "sync";
+export type RoomAction = "start" | "roll" | "sync" | "set_secret" | "guess";
 
 interface UseRoomSocketResult {
   status: ConnectionStatus;
   room: Room | null;
   game: GameState | null;
+  numberState: NumberState | null;
   error: string | null;
   clearError: () => void;
-  send: (action: RoomAction) => void;
+  send: (action: RoomAction, payload?: Record<string, unknown>) => void;
 }
 
 export function useRoomSocket(roomId: number): UseRoomSocketResult {
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [room, setRoom] = useState<Room | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
+  const [numberState, setNumberState] = useState<NumberState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -48,6 +50,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
         if (msg.type === "state") {
           if (msg.room) setRoom(msg.room);
           setGame(msg.game ?? null);
+          setNumberState(msg.number ?? null);
         } else if (msg.type === "error") {
           setError(msg.detail ?? "Something went wrong");
         }
@@ -72,14 +75,17 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
     };
   }, [roomId]);
 
-  const send = useCallback((action: RoomAction) => {
-    const socket = socketRef.current;
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ action }));
-    }
-  }, []);
+  const send = useCallback(
+    (action: RoomAction, payload?: Record<string, unknown>) => {
+      const socket = socketRef.current;
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ action, ...payload }));
+      }
+    },
+    [],
+  );
 
   const clearError = useCallback(() => setError(null), []);
 
-  return { status, room, game, error, clearError, send };
+  return { status, room, game, numberState, error, clearError, send };
 }

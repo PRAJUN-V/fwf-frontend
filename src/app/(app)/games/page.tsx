@@ -19,8 +19,16 @@ const GAMES: GameDef[] = [
     title: "Snake & Ladder",
     description: "Classic race to 100. Climb ladders, dodge snakes.",
     players: "2-4 players",
-    href: "/rooms",
+    href: "/rooms?game=snakes_and_ladders",
     emoji: "🐍",
+  },
+  {
+    key: "number_prediction",
+    title: "Number Prediction",
+    description: "Pick a secret number, then race to guess your rival's.",
+    players: "2 players",
+    href: "/rooms?game=number_prediction",
+    emoji: "🔢",
   },
   {
     key: "ludo",

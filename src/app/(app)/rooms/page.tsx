@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { CreateRoomModal } from "@/components/rooms/CreateRoomModal";
 import { Button } from "@/components/ui/Button";
@@ -10,12 +10,21 @@ import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { ApiError } from "@/lib/api";
 import { roomsApi } from "@/lib/services";
-import type { Room } from "@/types";
+import type { GameType, Room } from "@/types";
 
-const GAME_TYPE = "snakes_and_ladders" as const;
+const GAME_META: Record<string, { title: string }> = {
+  snakes_and_ladders: { title: "Snake & Ladder" },
+  number_prediction: { title: "Number Prediction" },
+};
 
-export default function RoomsLobbyPage() {
+function RoomsLobby() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gameParam = searchParams.get("game");
+  const gameType: GameType =
+    gameParam === "number_prediction" ? "number_prediction" : "snakes_and_ladders";
+  const meta = GAME_META[gameType] ?? GAME_META.snakes_and_ladders;
+
   const [rooms, setRooms] = useState<Room[] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [code, setCode] = useState("");
@@ -25,11 +34,11 @@ export default function RoomsLobbyPage() {
   const load = useCallback(async () => {
     try {
       const all = await roomsApi.list();
-      setRooms(all.filter((r) => r.game_type === GAME_TYPE));
+      setRooms(all.filter((r) => r.game_type === gameType));
     } catch {
       setRooms([]);
     }
-  }, []);
+  }, [gameType]);
 
   useEffect(() => {
     load();
@@ -55,7 +64,7 @@ export default function RoomsLobbyPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Snake &amp; Ladder</h1>
+        <h1 className="text-2xl font-bold">{meta.title}</h1>
         <p className="text-sm text-muted">
           Create a private room and share the code, or enter a friend&apos;s code to join.
         </p>
@@ -133,7 +142,10 @@ export default function RoomsLobbyPage() {
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted">
-                      Code <span className="font-mono font-semibold text-foreground">{room.code}</span>{" "}
+                      Code{" "}
+                      <span className="font-mono font-semibold text-foreground">
+                        {room.code}
+                      </span>{" "}
                       · {room.player_count}/{room.max_players} players
                     </p>
                   </div>
@@ -153,7 +165,7 @@ export default function RoomsLobbyPage() {
 
       <CreateRoomModal
         open={modalOpen}
-        gameType={GAME_TYPE}
+        gameType={gameType}
         onClose={() => setModalOpen(false)}
         onCreated={(room) => {
           setModalOpen(false);
@@ -161,5 +173,13 @@ export default function RoomsLobbyPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function RoomsLobbyPage() {
+  return (
+    <Suspense fallback={<Spinner className="h-7 w-7" />}>
+      <RoomsLobby />
+    </Suspense>
   );
 }

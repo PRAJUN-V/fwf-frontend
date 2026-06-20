@@ -1,4 +1,4 @@
-export type GameType = "snakes_and_ladders" | "ludo";
+export type GameType = "snakes_and_ladders" | "ludo" | "number_prediction";
 export type RoomStatus = "waiting" | "playing" | "finished";
 export type GameStatus = "in_progress" | "finished";
 
@@ -56,9 +56,37 @@ export interface GameState {
   players: GamePlayerState[];
 }
 
+export type GuessResult = "low" | "high" | "correct";
+
+export interface NumberGuessEntry {
+  value: number;
+  result: GuessResult;
+}
+
+export interface NumberOpponent {
+  user_id: number;
+  username: string;
+  ready: boolean;
+}
+
+export interface NumberState {
+  status: "setup" | "in_progress" | "finished";
+  min: number;
+  max: number;
+  current_turn_user_id: number | null;
+  winner_id: number | null;
+  your_secret: number | null;
+  you_ready: boolean;
+  opponent: NumberOpponent | null;
+  opponent_secret: number | null;
+  your_guesses: NumberGuessEntry[];
+  opponent_guesses: NumberGuessEntry[];
+}
+
 export interface RoomSocketMessage {
   type: "state" | "error";
   room?: Room;
   game?: GameState | null;
+  number?: NumberState | null;
   detail?: string;
 }

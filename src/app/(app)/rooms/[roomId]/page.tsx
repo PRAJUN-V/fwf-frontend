@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Dice } from "@/components/game/Dice";
+import { NumberPredictionGame } from "@/components/game/NumberPredictionGame";
 import { SnakeLadderBoard } from "@/components/game/SnakeLadderBoard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -19,7 +20,8 @@ export default function RoomPage() {
   const roomId = Number(params.roomId);
   const router = useRouter();
   const { user } = useAuth();
-  const { status, room, game, error, clearError, send } = useRoomSocket(roomId);
+  const { status, room, game, numberState, error, clearError, send } =
+    useRoomSocket(roomId);
 
   const [rolling, setRolling] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -132,6 +134,14 @@ export default function RoomPage() {
         </div>
       )}
 
+      {room.game_type === "number_prediction" ? (
+        <NumberPredictionGame
+          room={room}
+          state={numberState}
+          user={user}
+          send={send}
+        />
+      ) : (
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Card className="p-2 sm:p-4">
           {playing || finished ? (
@@ -248,6 +258,7 @@ export default function RoomPage() {
           </Card>
         </div>
       </div>
+      )}
     </div>
   );
 }
