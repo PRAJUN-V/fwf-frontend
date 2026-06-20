@@ -31,6 +31,14 @@ const GAMES: GameDef[] = [
     emoji: "🔢",
   },
   {
+    key: "hand_cricket",
+    title: "Hand Cricket",
+    description: "Show fingers 1–6. Match = out, else score runs. Best of 2 innings.",
+    players: "2 players",
+    href: "/rooms?game=hand_cricket",
+    emoji: "🏏",
+  },
+  {
     key: "ludo",
     title: "Ludo",
     description: "Move all your tokens home before everyone else.",

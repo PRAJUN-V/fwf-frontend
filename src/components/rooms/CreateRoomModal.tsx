@@ -22,7 +22,8 @@ export function CreateRoomModal({ open, onClose, onCreated, gameType }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const lockTwoPlayers = gameType === "number_prediction";
+  const lockTwoPlayers =
+    gameType === "number_prediction" || gameType === "hand_cricket";
 
   useEffect(() => {
     if (open) {
@@ -64,7 +65,7 @@ export function CreateRoomModal({ open, onClose, onCreated, gameType }: Props) {
 
         {lockTwoPlayers ? (
           <p className="rounded-lg bg-surface-2/50 px-3 py-2 text-sm text-muted">
-            Number Prediction is a 2-player duel.
+            This game is a 2-player duel.
           </p>
         ) : (
           <div>

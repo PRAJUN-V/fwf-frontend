@@ -15,14 +15,20 @@ import type { GameType, Room } from "@/types";
 const GAME_META: Record<string, { title: string }> = {
   snakes_and_ladders: { title: "Snake & Ladder" },
   number_prediction: { title: "Number Prediction" },
+  hand_cricket: { title: "Hand Cricket" },
 };
+
+function parseGameType(param: string | null): GameType {
+  if (param === "number_prediction") return "number_prediction";
+  if (param === "hand_cricket") return "hand_cricket";
+  return "snakes_and_ladders";
+}
 
 function RoomsLobby() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const gameParam = searchParams.get("game");
-  const gameType: GameType =
-    gameParam === "number_prediction" ? "number_prediction" : "snakes_and_ladders";
+  const gameType = parseGameType(gameParam);
   const meta = GAME_META[gameType] ?? GAME_META.snakes_and_ladders;
 
   const [rooms, setRooms] = useState<Room[] | null>(null);

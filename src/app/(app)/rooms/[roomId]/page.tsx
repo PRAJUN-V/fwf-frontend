@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Dice } from "@/components/game/Dice";
+import { HandCricketGame } from "@/components/game/HandCricketGame";
 import { NumberPredictionGame } from "@/components/game/NumberPredictionGame";
 import { SnakeLadderBoard } from "@/components/game/SnakeLadderBoard";
 import { Button } from "@/components/ui/Button";
@@ -15,12 +16,21 @@ import { useAuth } from "@/lib/auth";
 import { roomsApi } from "@/lib/services";
 import { useRoomSocket } from "@/lib/ws";
 
+import type { GameType } from "@/types";
+
+const GAME_LABELS: Record<GameType, string> = {
+  snakes_and_ladders: "Snake & Ladder",
+  number_prediction: "Number Prediction",
+  hand_cricket: "Hand Cricket",
+  ludo: "Ludo",
+};
+
 export default function RoomPage() {
   const params = useParams<{ roomId: string }>();
   const roomId = Number(params.roomId);
   const router = useRouter();
   const { user } = useAuth();
-  const { status, room, game, numberState, error, messageVersion, clearError, send } =
+  const { status, room, game, numberState, handCricketState, error, messageVersion, clearError, send } =
     useRoomSocket(roomId);
 
   const [pending, setPending] = useState(false);
@@ -101,7 +111,7 @@ export default function RoomPage() {
           </button>
           <h1 className="text-2xl font-bold">{room.name}</h1>
           <p className="text-sm text-muted">
-            Snake &amp; Ladder · {room.player_count}/{room.max_players} players ·{" "}
+            {GAME_LABELS[room.game_type]} · {room.player_count}/{room.max_players} players ·{" "}
             <span
               className={cn(
                 status === "open" ? "text-success" : "text-muted",
@@ -141,6 +151,14 @@ export default function RoomPage() {
         <NumberPredictionGame
           room={room}
           state={numberState}
+          user={user}
+          send={send}
+          messageVersion={messageVersion}
+        />
+      ) : room.game_type === "hand_cricket" ? (
+        <HandCricketGame
+          room={room}
+          state={handCricketState}
           user={user}
           send={send}
           messageVersion={messageVersion}

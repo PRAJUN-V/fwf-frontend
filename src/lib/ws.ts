@@ -4,17 +4,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getToken } from "./api";
 import { wsBaseUrl } from "./config";
-import type { GameState, NumberState, Room, RoomSocketMessage } from "@/types";
+import type { GameState, HandCricketState, NumberState, Room, RoomSocketMessage } from "@/types";
 
 export type ConnectionStatus = "connecting" | "open" | "closed";
 
-export type RoomAction = "start" | "roll" | "sync" | "set_secret" | "guess";
+export type RoomAction =
+  | "start"
+  | "roll"
+  | "sync"
+  | "set_secret"
+  | "guess"
+  | "reveal"
+  | "begin_innings_2";
 
 interface UseRoomSocketResult {
   status: ConnectionStatus;
   room: Room | null;
   game: GameState | null;
   numberState: NumberState | null;
+  handCricketState: HandCricketState | null;
   error: string | null;
   /** Increments on every server message (state or error); used to clear pending UI. */
   messageVersion: number;
@@ -27,6 +35,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
   const [room, setRoom] = useState<Room | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
   const [numberState, setNumberState] = useState<NumberState | null>(null);
+  const [handCricketState, setHandCricketState] = useState<HandCricketState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [messageVersion, setMessageVersion] = useState(0);
   const socketRef = useRef<WebSocket | null>(null);
@@ -54,6 +63,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
           if (msg.room) setRoom(msg.room);
           setGame(msg.game ?? null);
           setNumberState(msg.number ?? null);
+          setHandCricketState(msg.hand_cricket ?? null);
         } else if (msg.type === "error") {
           setError(msg.detail ?? "Something went wrong");
         }
@@ -96,6 +106,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
     room,
     game,
     numberState,
+    handCricketState,
     error,
     messageVersion,
     clearError,
