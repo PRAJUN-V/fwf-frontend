@@ -1,0 +1,85 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { getToken } from "./api";
+import { wsBaseUrl } from "./config";
+import type { GameState, Room, RoomSocketMessage } from "@/types";
+
+export type ConnectionStatus = "connecting" | "open" | "closed";
+
+export type RoomAction = "start" | "roll" | "sync";
+
+interface UseRoomSocketResult {
+  status: ConnectionStatus;
+  room: Room | null;
+  game: GameState | null;
+  error: string | null;
+  clearError: () => void;
+  send: (action: RoomAction) => void;
+}
+
+export function useRoomSocket(roomId: number): UseRoomSocketResult {
+  const [status, setStatus] = useState<ConnectionStatus>("connecting");
+  const [room, setRoom] = useState<Room | null>(null);
+  const [game, setGame] = useState<GameState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setStatus("closed");
+      setError("You are not signed in");
+      return;
+    }
+
+    let closedByUs = false;
+    const url = `${wsBaseUrl()}/ws/rooms/${roomId}?token=${encodeURIComponent(token)}`;
+    const socket = new WebSocket(url);
+    socketRef.current = socket;
+    setStatus("connecting");
+
+    socket.onopen = () => setStatus("open");
+
+    socket.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data) as RoomSocketMessage;
+        if (msg.type === "state") {
+          if (msg.room) setRoom(msg.room);
+          setGame(msg.game ?? null);
+        } else if (msg.type === "error") {
+          setError(msg.detail ?? "Something went wrong");
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    };
+
+    socket.onclose = () => {
+      setStatus("closed");
+      if (!closedByUs) {
+        // Connection dropped unexpectedly.
+      }
+    };
+
+    socket.onerror = () => setStatus("closed");
+
+    return () => {
+      closedByUs = true;
+      socket.close();
+      socketRef.current = null;
+    };
+  }, [roomId]);
+
+  const send = useCallback((action: RoomAction) => {
+    const socket = socketRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ action }));
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return { status, room, game, error, clearError, send };
+}
