@@ -99,7 +99,7 @@ export function CreateRoomModal({ open, onClose, onCreated, gameType }: Props) {
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" loading={saving}>
             {saving ? "Creating…" : "Create room"}
           </Button>
         </div>

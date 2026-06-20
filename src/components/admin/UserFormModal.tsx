@@ -110,7 +110,7 @@ export function UserFormModal({ open, onClose, onSaved, editing }: Props) {
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" loading={saving}>
             {saving ? "Saving…" : isEdit ? "Save changes" : "Create user"}
           </Button>
         </div>

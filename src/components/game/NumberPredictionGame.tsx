@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -13,6 +13,7 @@ interface Props {
   state: NumberState | null;
   user: User;
   send: (action: "set_secret" | "start" | "guess", payload?: Record<string, unknown>) => void;
+  messageVersion: number;
 }
 
 function resultLabel(result: NumberGuessEntry["result"]): string {
@@ -60,9 +61,21 @@ function GuessList({
   );
 }
 
-export function NumberPredictionGame({ room, state, user, send }: Props) {
+export function NumberPredictionGame({
+  room,
+  state,
+  user,
+  send,
+  messageVersion,
+}: Props) {
   const [secret, setSecret] = useState("");
   const [guess, setGuess] = useState("");
+  const [pending, setPending] = useState(false);
+
+  // Any server message (new state or error) ends the in-flight action.
+  useEffect(() => {
+    setPending(false);
+  }, [messageVersion]);
 
   if (!state) return null;
 
@@ -74,6 +87,7 @@ export function NumberPredictionGame({ room, state, user, send }: Props) {
     e.preventDefault();
     const value = Number(secret);
     if (!Number.isInteger(value) || value < min || value > max) return;
+    setPending(true);
     send("set_secret", { value });
   };
 
@@ -81,8 +95,14 @@ export function NumberPredictionGame({ room, state, user, send }: Props) {
     e.preventDefault();
     const value = Number(guess);
     if (!Number.isInteger(value) || value < min || value > max) return;
+    setPending(true);
     send("guess", { value });
     setGuess("");
+  };
+
+  const startGame = () => {
+    setPending(true);
+    send("start");
   };
 
   // ----- Setup phase -----
@@ -115,7 +135,7 @@ export function NumberPredictionGame({ room, state, user, send }: Props) {
               className="text-center text-xl font-bold"
               required
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" loading={pending}>
               Lock in my number
             </Button>
           </form>
@@ -137,7 +157,12 @@ export function NumberPredictionGame({ room, state, user, send }: Props) {
         </div>
 
         {isHost ? (
-          <Button className="w-full" disabled={!bothReady} onClick={() => send("start")}>
+          <Button
+            className="w-full"
+            disabled={!bothReady}
+            loading={pending}
+            onClick={startGame}
+          >
             {bothReady ? "Start game" : "Waiting for both players…"}
           </Button>
         ) : (
@@ -224,7 +249,7 @@ export function NumberPredictionGame({ room, state, user, send }: Props) {
               autoFocus
               required
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" loading={pending}>
               Guess
             </Button>
           </form>

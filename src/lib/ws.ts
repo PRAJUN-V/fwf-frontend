@@ -16,6 +16,8 @@ interface UseRoomSocketResult {
   game: GameState | null;
   numberState: NumberState | null;
   error: string | null;
+  /** Increments on every server message (state or error); used to clear pending UI. */
+  messageVersion: number;
   clearError: () => void;
   send: (action: RoomAction, payload?: Record<string, unknown>) => void;
 }
@@ -26,6 +28,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
   const [game, setGame] = useState<GameState | null>(null);
   const [numberState, setNumberState] = useState<NumberState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [messageVersion, setMessageVersion] = useState(0);
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
         } else if (msg.type === "error") {
           setError(msg.detail ?? "Something went wrong");
         }
+        setMessageVersion((v) => v + 1);
       } catch {
         // ignore malformed messages
       }
@@ -87,5 +91,14 @@ export function useRoomSocket(roomId: number): UseRoomSocketResult {
 
   const clearError = useCallback(() => setError(null), []);
 
-  return { status, room, game, numberState, error, clearError, send };
+  return {
+    status,
+    room,
+    game,
+    numberState,
+    error,
+    messageVersion,
+    clearError,
+    send,
+  };
 }

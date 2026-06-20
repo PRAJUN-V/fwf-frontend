@@ -100,7 +100,7 @@ function RoomsLobby() {
                 {joinError}
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={joining || !code.trim()}>
+            <Button type="submit" className="w-full" disabled={!code.trim()} loading={joining}>
               {joining ? "Joining…" : "Join room"}
             </Button>
           </form>

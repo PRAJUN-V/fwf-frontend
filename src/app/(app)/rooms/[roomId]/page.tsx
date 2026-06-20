@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Dice } from "@/components/game/Dice";
@@ -20,12 +20,12 @@ export default function RoomPage() {
   const roomId = Number(params.roomId);
   const router = useRouter();
   const { user } = useAuth();
-  const { status, room, game, numberState, error, clearError, send } =
+  const { status, room, game, numberState, error, messageVersion, clearError, send } =
     useRoomSocket(roomId);
 
-  const [rolling, setRolling] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const lastDiceRef = useRef<number | null>(null);
 
   const copyCode = async () => {
     if (!room?.code) return;
@@ -38,15 +38,13 @@ export default function RoomPage() {
     }
   };
 
+  // Any server message (new state or error) ends the in-flight action.
   useEffect(() => {
-    if (!game) return;
-    if (game.last_dice !== lastDiceRef.current) {
-      lastDiceRef.current = game.last_dice;
-      setRolling(false);
-    }
-  }, [game]);
+    setPending(false);
+  }, [messageVersion]);
 
   const leave = async () => {
+    setLeaving(true);
     try {
       await roomsApi.leave(roomId);
     } catch {
@@ -82,8 +80,13 @@ export default function RoomPage() {
     game?.players.find((p) => p.user_id === id)?.username ?? "—";
 
   const handleRoll = () => {
-    setRolling(true);
+    setPending(true);
     send("roll");
+  };
+
+  const handleStart = () => {
+    setPending(true);
+    send("start");
   };
 
   return (
@@ -108,8 +111,8 @@ export default function RoomPage() {
             </span>
           </p>
         </div>
-        <Button variant="secondary" onClick={leave}>
-          Leave
+        <Button variant="secondary" onClick={leave} loading={leaving}>
+          {leaving ? "Leaving…" : "Leave"}
         </Button>
       </div>
 
@@ -140,6 +143,7 @@ export default function RoomPage() {
           state={numberState}
           user={user}
           send={send}
+          messageVersion={messageVersion}
         />
       ) : (
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -227,14 +231,15 @@ export default function RoomPage() {
                   )}
                 </p>
                 <div className="flex justify-center">
-                  <Dice value={game!.last_dice} rolling={rolling} />
+                  <Dice value={game!.last_dice} rolling={pending} />
                 </div>
                 <Button
                   className="w-full"
-                  disabled={!isMyTurn || rolling}
+                  disabled={!isMyTurn}
+                  loading={pending && isMyTurn}
                   onClick={handleRoll}
                 >
-                  {isMyTurn ? (rolling ? "Rolling…" : "Roll dice") : "Waiting…"}
+                  {isMyTurn ? (pending ? "Rolling…" : "Roll dice") : "Waiting…"}
                 </Button>
               </div>
             ) : (
@@ -248,7 +253,8 @@ export default function RoomPage() {
                   <Button
                     className="w-full"
                     disabled={room.player_count < 2}
-                    onClick={() => send("start")}
+                    loading={pending}
+                    onClick={handleStart}
                   >
                     Start game
                   </Button>
