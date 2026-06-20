@@ -27,6 +27,7 @@ export interface RoomPlayer {
 
 export interface Room {
   id: number;
+  code: string | null;
   name: string;
   game_type: GameType;
   max_players: number;

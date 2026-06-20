@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CreateRoomModal } from "@/components/rooms/CreateRoomModal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { ApiError } from "@/lib/api";
 import { roomsApi } from "@/lib/services";
@@ -16,119 +17,139 @@ const GAME_TYPE = "snakes_and_ladders" as const;
 export default function RoomsLobbyPage() {
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [joiningId, setJoiningId] = useState<number | null>(null);
+  const [code, setCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const all = await roomsApi.list();
       setRooms(all.filter((r) => r.game_type === GAME_TYPE));
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to load rooms");
+    } catch {
+      setRooms([]);
     }
   }, []);
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 4000);
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [load]);
 
-  const handleJoin = async (room: Room) => {
-    setJoiningId(room.id);
-    setError(null);
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    setJoining(true);
+    setJoinError(null);
     try {
-      await roomsApi.join(room.id);
+      const room = await roomsApi.joinByCode(trimmed);
       router.push(`/rooms/${room.id}`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to join room");
-      setJoiningId(null);
-      load();
+      setJoinError(err instanceof ApiError ? err.message : "Failed to join room");
+      setJoining(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Snake &amp; Ladder rooms</h1>
-          <p className="text-sm text-muted">Join an open room or create your own.</p>
-        </div>
-        <Button onClick={() => setModalOpen(true)}>+ Create room</Button>
+      <div>
+        <h1 className="text-2xl font-bold">Snake &amp; Ladder</h1>
+        <p className="text-sm text-muted">
+          Create a private room and share the code, or enter a friend&apos;s code to join.
+        </p>
       </div>
 
-      {error && (
-        <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
-      )}
-
-      {rooms === null ? (
-        <div className="flex justify-center py-16">
-          <Spinner className="h-7 w-7" />
-        </div>
-      ) : rooms.length === 0 ? (
-        <Card className="py-16 text-center">
-          <p className="text-sm text-muted">
-            No open rooms yet. Create one to get started!
-          </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="flex flex-col justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Create a room</h2>
+            <p className="mt-1 text-sm text-muted">
+              You&apos;ll get a code to share with your friends.
+            </p>
+          </div>
+          <Button onClick={() => setModalOpen(true)}>+ Create room</Button>
         </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rooms.map((room) => {
-            const full = room.player_count >= room.max_players;
-            const started = room.status !== "waiting";
-            const disabled = full || started || joiningId !== null;
-            return (
-              <Card key={room.id} className="flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="text-lg font-semibold">{room.name}</h2>
-                    <span
-                      className={
-                        "rounded-full px-2 py-0.5 text-xs " +
-                        (started
-                          ? "bg-accent/15 text-accent"
-                          : full
-                            ? "bg-danger/15 text-danger"
-                            : "bg-success/15 text-success")
-                      }
-                    >
-                      {started ? "In game" : full ? "Full" : "Open"}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted">
-                    {room.player_count}/{room.max_players} players
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {room.players.map((p) => (
+
+        <Card>
+          <h2 className="text-lg font-semibold">Join with a code</h2>
+          <p className="mt-1 text-sm text-muted">Enter the code your friend shared.</p>
+          <form onSubmit={handleJoin} className="mt-4 space-y-3">
+            <Input
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="e.g. 7KQ2M9"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              className="text-center text-lg font-semibold tracking-[0.3em] uppercase"
+              maxLength={12}
+            />
+            {joinError && (
+              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+                {joinError}
+              </p>
+            )}
+            <Button type="submit" className="w-full" disabled={joining || !code.trim()}>
+              {joining ? "Joining…" : "Join room"}
+            </Button>
+          </form>
+        </Card>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+          Your rooms
+        </h2>
+        {rooms === null ? (
+          <div className="flex justify-center py-10">
+            <Spinner className="h-7 w-7" />
+          </div>
+        ) : rooms.length === 0 ? (
+          <Card className="py-10 text-center">
+            <p className="text-sm text-muted">
+              You&apos;re not in any rooms yet. Create one or join with a code.
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rooms.map((room) => {
+              const started = room.status !== "waiting";
+              return (
+                <Card key={room.id} className="flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-lg font-semibold">{room.name}</h3>
                       <span
-                        key={p.user_id}
-                        className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted"
+                        className={
+                          "rounded-full px-2 py-0.5 text-xs " +
+                          (started
+                            ? "bg-accent/15 text-accent"
+                            : "bg-success/15 text-success")
+                        }
                       >
-                        {p.username}
+                        {started ? "In game" : "Waiting"}
                       </span>
-                    ))}
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      Code <span className="font-mono font-semibold text-foreground">{room.code}</span>{" "}
+                      · {room.player_count}/{room.max_players} players
+                    </p>
                   </div>
-                </div>
-                <Button
-                  className="mt-4 w-full"
-                  disabled={disabled}
-                  onClick={() => handleJoin(room)}
-                >
-                  {joiningId === room.id
-                    ? "Joining…"
-                    : started
-                      ? "In progress"
-                      : full
-                        ? "Room full"
-                        : "Join room"}
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  <Button
+                    className="mt-4 w-full"
+                    variant="secondary"
+                    onClick={() => router.push(`/rooms/${room.id}`)}
+                  >
+                    Open
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <CreateRoomModal
         open={modalOpen}

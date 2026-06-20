@@ -31,11 +31,13 @@ export interface RoomCreatePayload {
 }
 
 export const roomsApi = {
+  // Returns only the rooms the current user is a member of (private rooms).
   list: () => apiFetch<Room[]>("/rooms"),
   create: (payload: RoomCreatePayload) =>
     apiFetch<Room>("/rooms", { method: "POST", body: payload }),
   get: (id: number) => apiFetch<Room>(`/rooms/${id}`),
-  join: (id: number) => apiFetch<Room>(`/rooms/${id}/join`, { method: "POST" }),
+  joinByCode: (code: string) =>
+    apiFetch<Room>("/rooms/join", { method: "POST", body: { code } }),
   leave: (id: number) =>
     apiFetch<{ deleted: boolean }>(`/rooms/${id}/leave`, { method: "POST" }),
 };

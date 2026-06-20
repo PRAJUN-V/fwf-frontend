@@ -22,7 +22,19 @@ export default function RoomPage() {
   const { status, room, game, error, clearError, send } = useRoomSocket(roomId);
 
   const [rolling, setRolling] = useState(false);
+  const [copied, setCopied] = useState(false);
   const lastDiceRef = useRef<number | null>(null);
+
+  const copyCode = async () => {
+    if (!room?.code) return;
+    try {
+      await navigator.clipboard.writeText(room.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
 
   useEffect(() => {
     if (!game) return;
@@ -98,6 +110,18 @@ export default function RoomPage() {
           Leave
         </Button>
       </div>
+
+      {room.code && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2/50 px-4 py-3">
+          <span className="text-sm text-muted">Share this code to invite friends:</span>
+          <span className="font-mono text-xl font-bold tracking-[0.3em] text-foreground">
+            {room.code}
+          </span>
+          <Button size="sm" variant="secondary" onClick={copyCode}>
+            {copied ? "Copied!" : "Copy"}
+          </Button>
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center justify-between rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
