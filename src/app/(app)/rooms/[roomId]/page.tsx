@@ -50,7 +50,7 @@ export default function RoomPage() {
     } catch {
       // ignore
     }
-    router.push("/rooms");
+    router.push("/games");
   };
 
   if (status === "connecting" && !room) return <FullPageSpinner />;
@@ -61,8 +61,8 @@ export default function RoomPage() {
         <p className="text-sm text-danger">
           Could not connect to this room. It may no longer exist.
         </p>
-        <Button className="mt-4" onClick={() => router.push("/rooms")}>
-          Back to rooms
+        <Button className="mt-4" onClick={() => router.push("/games")}>
+          Back to games
         </Button>
       </Card>
     );
@@ -94,10 +94,10 @@ export default function RoomPage() {
       <div className="flex items-center justify-between">
         <div>
           <button
-            onClick={() => router.push("/rooms")}
+            onClick={() => router.push("/games")}
             className="text-sm text-muted hover:text-foreground"
           >
-            ← Rooms
+            ← Games
           </button>
           <h1 className="text-2xl font-bold">{room.name}</h1>
           <p className="text-sm text-muted">
@@ -212,8 +212,8 @@ export default function RoomPage() {
                 <p className="text-lg font-bold">
                   {winner?.user_id === user.id ? "You win!" : `${winner?.username} wins!`}
                 </p>
-                <Button className="w-full" onClick={() => router.push("/rooms")}>
-                  Back to rooms
+                <Button className="w-full" onClick={() => router.push("/games")}>
+                  Back to games
                 </Button>
               </div>
             ) : playing ? (
