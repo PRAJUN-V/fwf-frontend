@@ -28,12 +28,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-surface/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <Link href="/games" className="text-lg font-bold">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-2 sm:gap-6">
+            <Link href="/games" className="text-base font-bold sm:text-lg">
               Fun<span className="text-primary">With</span>Friends
             </Link>
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-0.5 sm:gap-1">
               {navItems.map((item) => {
                 const active = pathname.startsWith(item.href);
                 return (
@@ -41,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                      "rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-3",
                       active
                         ? "bg-surface-2 text-foreground"
                         : "text-muted hover:text-foreground",
@@ -54,8 +54,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="text-right">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight">{user.username}</p>
               {user.is_admin && (
                 <p className="text-xs leading-tight text-accent">Admin</p>
@@ -75,7 +75,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-6 sm:px-4 sm:py-8">
+        {children}
+      </main>
     </div>
   );
 }

@@ -109,7 +109,7 @@ export default function RoomPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Card className="p-4">
+        <Card className="p-2 sm:p-4">
           {playing || finished ? (
             <SnakeLadderBoard
               players={game!.players}
@@ -128,8 +128,8 @@ export default function RoomPage() {
           )}
         </Card>
 
-        <div className="space-y-6">
-          <Card>
+        <div className="flex flex-col gap-6">
+          <Card className="order-2 lg:order-1">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
               Players
             </h2>
@@ -167,7 +167,7 @@ export default function RoomPage() {
             </ul>
           </Card>
 
-          <Card className="text-center">
+          <Card className="order-1 text-center lg:order-2">
             {finished ? (
               <div className="space-y-3">
                 <div className="text-4xl">🏆</div>

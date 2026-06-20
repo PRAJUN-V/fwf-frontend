@@ -78,7 +78,8 @@ export default function AdminUsersPage() {
         ) : users.length === 0 ? (
           <p className="py-16 text-center text-sm text-muted">No users yet.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-5 py-3 font-medium">Username</th>
@@ -126,6 +127,7 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 
